@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AzAPI native — Team Share</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+/* === THEME VARIABLES === */
+:root {
+    --stage-bg: #eaf4fb;
+    --slide-bg: #f4fafd;
+    --bg-deep: #0e1726;
+    --bg-panel: rgba(255, 255, 255, 0.88);
+    --bg-panel-2: rgba(255, 255, 255, 0.96);
+    --text: #26384d;
+    --text-bright: #0e1726;
+    --text-dim: #53657a;
+    --muted: #6f7d8f;
+    --azure: #0078d4;
+    --azure-bright: #0067b8;
+    --azure-soft: rgba(0, 120, 212, 0.12);
+    --amber: #ffb900;
+    --amber-soft: rgba(255, 185, 0, 0.16);
+    --green: #107c10;
+    --red: #d13438;
+    --line: rgba(0, 103, 184, 0.16);
+    --line-strong: rgba(0, 120, 212, 0.34);
+    --shadow: 0 24px 80px rgba(14, 23, 38, 0.12);
+    --font-display: 'Sora', 'Space Grotesk', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* === RESET === */
+* { box-sizing: border-box; }
+html, body, h1, h2, h3, p, ul, ol, li, pre { margin: 0; padding: 0; }
+body { font-family: var(--font-body); color: var(--text); }
+
+/* ===========================================
+   FIXED 16:9 STAGE: MANDATORY BASE STYLES
+   Include this ENTIRE file in every presentation.
+   Slides are authored at 1920×1080 and scaled as a whole.
+   =========================================== */
+
+/* 1. Lock the browser viewport */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+
+/* 2. Full-window deck viewport */
+.deck-viewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--stage-bg, #000);
+}
+
+/* 3. Fixed 16:9 design canvas.
+   JavaScript sets transform: translate(...) scale(...). */
+.deck-stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    transform-origin: 0 0;
+    background: var(--slide-bg, #fff);
+}
+
+/* 4. Slides stack inside the fixed stage.
+   Content must be laid out at 1920×1080, not reflowed per device. */
+.slide {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    background: var(--slide-bg, #fff);
+}
+
+.slide.active,
+.slide.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 1;
+}
+
+/* 5. Keep media inside authored slide bounds */
+img,
+video,
+canvas,
+svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* 6. Presentation chrome stays outside the slide design system */
+.deck-controls {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+/* 7. Print one fixed-size slide per page */
+@media print {
+    html,
+    body {
+        width: 1920px;
+        height: auto;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .deck-viewport {
+        position: static;
+        overflow: visible;
+        background: #fff;
+    }
+
+    .deck-stage {
+        position: static;
+        width: auto;
+        height: auto;
+        transform: none !important;
+        background: none;
+    }
+
+    .slide {
+        position: relative;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 1920px;
+        height: 1080px;
+        break-after: page;
+        page-break-after: always;
+    }
+
+    .slide:last-child {
+        break-after: auto;
+        page-break-after: auto;
+    }
+
+    .deck-controls {
+        display: none !important;
+    }
+}
+
+/* 8. Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+}
+
+/* === SLIDE ATMOSPHERE === */
+.slide {
+    color: var(--text);
+    font-family: var(--font-body);
+    background:
+        radial-gradient(940px 640px at 82% -14%, rgba(80, 230, 255, 0.34), transparent 60%),
+        radial-gradient(900px 680px at 8% 112%, rgba(0, 120, 212, 0.16), transparent 62%),
+        linear-gradient(180deg, #ffffff 0%, #f4fafd 54%, #eaf4fb 100%);
+}
+.slide::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(1300px 900px at 70% 20%, #000, transparent 80%);
+}
+.slide::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(115deg, rgba(255,255,255,0.54), transparent 36%, rgba(141,200,232,0.16) 100%);
+    mix-blend-mode: normal;
+}
+.corner { position: absolute; width: 26px; height: 26px; border: 2px solid var(--azure); opacity: .68; z-index: 3; }
+.corner.tl { left: 58px; top: 58px; border-right: 0; border-bottom: 0; }
+.corner.tr { right: 58px; top: 58px; border-left: 0; border-bottom: 0; }
+.corner.bl { left: 58px; bottom: 58px; border-right: 0; border-top: 0; }
+.corner.br { right: 58px; bottom: 58px; border-left: 0; border-top: 0; }
+.shell { position: absolute; inset: 88px 108px 82px; z-index: 2; display: flex; flex-direction: column; }
+.topbar { display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 17px; letter-spacing: .08em; color: var(--text-dim); }
+.topbar .path { color: var(--azure-bright); }
+.topbar .section { color: var(--text-dim); }
+.topbar .live::before { content:""; display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--azure); margin-right:10px; box-shadow:0 0 14px rgba(0,120,212,.42); }
+.footer { position: absolute; left: 108px; right: 108px; bottom: 46px; z-index: 4; display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.footer .bar { position: absolute; left: 0; right: 0; top: -18px; height: 1px; background: rgba(0,103,184,.18); }
+.footer .progress { position: absolute; left: 0; top: -18px; height: 1px; width: calc(var(--p, 0) * 1%); background: linear-gradient(90deg, var(--azure), #50e6ff); box-shadow: 0 0 18px rgba(0,120,212,.28); }
+
+/* === TYPOGRAPHY === */
+.kicker { display: inline-flex; align-items: center; gap: 14px; align-self: flex-start; padding: 10px 22px; border: 1px solid var(--line); border-radius: 999px; background: rgba(78,161,255,.06); font-family: var(--font-mono); font-size: 18px; letter-spacing: .24em; text-transform: uppercase; color: var(--azure-bright); }
+.kicker::before { content:""; width:10px; height:10px; background: var(--azure); box-shadow: 0 0 14px var(--azure); }
+h1, h2 { font-family: var(--font-display); color: var(--text-bright); letter-spacing: -.045em; }
+h1 { font-size: 198px; line-height: .94; font-weight: 800; }
+h1 .grad, h2 .grad { background: linear-gradient(100deg, #004275, var(--azure) 52%, #50e6ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { margin-top: 34px; font-size: 90px; line-height: 1.08; max-width: 1440px; font-weight: 800; }
+.lead { margin-top: 34px; max-width: 1240px; font-size: 38px; line-height: 1.35; color: var(--text); }
+.lead b { color: var(--text-bright); font-weight: 700; }
+.mono { font-family: var(--font-mono); }
+.small { color: var(--text-dim); font-size: 22px; line-height: 1.5; }
+
+/* === ANIMATIONS === */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .78s var(--ease-out-expo), transform .78s var(--ease-out-expo); transition-delay: calc(var(--d, 0) * 90ms); }
+.visible .reveal { opacity: 1; transform: translateY(0); }
+.reveal-left { opacity: 0; transform: translateX(-34px); transition: opacity .78s var(--ease-out-expo), transform .78s var(--ease-out-expo); transition-delay: calc(var(--d, 0) * 90ms); }
+.visible .reveal-left { opacity: 1; transform: translateX(0); }
+.reveal-scale { opacity: 0; transform: scale(.96); transition: opacity .78s var(--ease-out-expo), transform .78s var(--ease-out-expo); transition-delay: calc(var(--d, 0) * 90ms); }
+.visible .reveal-scale { opacity: 1; transform: scale(1); }
+
+/* === COMPONENTS === */
+.grid-2 { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.grid-3 { margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.grid-4 { margin-top: 42px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.card { position: relative; min-height: 190px; padding: 30px 32px; background: var(--bg-panel); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); overflow: hidden; }
+.card::before { content:""; position:absolute; left:0; top:0; right:0; height:3px; background: linear-gradient(90deg, var(--azure), #50e6ff); opacity:.78; }
+.card h3 { font-size: 34px; line-height: 1.05; color: var(--text-bright); margin-bottom: 16px; }
+.card p, .card li { font-size: 24px; line-height: 1.34; color: #3c4f66; }
+.card ul { list-style: none; display: grid; gap: 13px; }
+.card li::before { content:"▹"; color: var(--azure); margin-right: 10px; }
+.card.native { border-color: rgba(0,120,212,.28); background: linear-gradient(180deg, rgba(244,250,253,.98), rgba(226,244,255,.86)); }
+.card.dynamic { border-color: rgba(255,185,0,.45); background: linear-gradient(180deg, rgba(255,248,215,.96), rgba(255,255,255,.88)); }
+.card.arm { border-color: rgba(16,124,16,.24); background: linear-gradient(180deg, rgba(239,250,239,.96), rgba(255,255,255,.88)); }
+.tag { display:inline-flex; align-items:center; gap:9px; font-family:var(--font-mono); font-size:14px; letter-spacing:.14em; text-transform:uppercase; padding:8px 12px; border:1px solid rgba(0,120,212,.24); border-radius:999px; color:var(--azure-bright); background:rgba(0,120,212,.08); margin-bottom:18px; }
+.tag.amber { color: #8a6100; border-color: rgba(255,185,0,.38); background: var(--amber-soft); }
+.tag.green { color: var(--green); border-color: rgba(16,124,16,.25); background: rgba(16,124,16,.08); }
+.metric { margin-top: 48px; display:grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.metric .m { padding: 28px 30px; border-top: 1px solid var(--line); }
+.metric .label { font-family: var(--font-mono); font-size: 14px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+.metric .value { font-size: 30px; font-weight: 700; color: var(--text-bright); }
+.metric .value span { color: var(--azure-bright); }
+
+/* === TABLES AND COMPARISONS === */
+.compare { margin-top: 42px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.compare .col { border: 1px solid var(--line); border-radius: 24px; overflow: hidden; background: rgba(255,255,255,.92); box-shadow: var(--shadow); }
+.compare .head { padding: 24px 28px; border-bottom: 1px solid var(--line); font-size: 30px; font-weight: 700; color: var(--text-bright); background: linear-gradient(180deg, rgba(244,250,253,.95), rgba(255,255,255,.7)); }
+.compare .head small { display:block; margin-top:6px; font-family:var(--font-mono); font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-dim); }
+.compare .body { padding: 24px 28px 30px; display:grid; gap: 16px; }
+.row { display:grid; grid-template-columns: 210px 1fr; gap:18px; padding:14px 0; border-bottom:1px solid rgba(0,103,184,.12); font-size:22px; line-height:1.3; }
+.row:last-child { border-bottom:0; }
+.row b { color:var(--azure-bright); font-family:var(--font-mono); font-size:14px; text-transform:uppercase; letter-spacing:.12em; }
+.row span { color:#34465c; }
+.table { margin-top: 42px; border:1px solid var(--line); border-radius:24px; overflow:hidden; background:rgba(255,255,255,.9); }
+.tr { display:grid; grid-template-columns: 1.1fr 1fr 1fr; border-bottom:1px solid rgba(0,103,184,.12); }
+.tr:last-child { border-bottom:0; }
+.th, .td { padding: 20px 24px; font-size: 22px; line-height:1.3; }
+.th { font-family:var(--font-mono); font-size:14px; letter-spacing:.14em; text-transform:uppercase; color:var(--azure-bright); background:rgba(0,120,212,.08); }
+.td { color:#34465c; }
+.td.good { color: var(--green); }
+.td.warn { color: #8a6100; }
+
+/* === CODE BLOCKS === */
+.code-grid { margin-top: 38px; display:grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.code-card { border:1px solid rgba(0,66,117,.24); border-radius:22px; overflow:hidden; background:#0e1726; box-shadow:var(--shadow); }
+.code-title { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid rgba(80,230,255,.16); font-family:var(--font-mono); font-size:14px; letter-spacing:.13em; text-transform:uppercase; color:#b8c7dc; background:#17253d; }
+.code-title .native-label { color:#50e6ff; }
+pre { padding: 22px 24px 26px; font-family:var(--font-mono); font-size:18px; line-height:1.42; color:#e7f1ff; white-space:pre-wrap; }
+.kw { color:#50e6ff; } .str { color:#ffdc7a; } .prop { color:#8bd8ff; } .cm { color:#8ba0bb; } .fn { color:#c6a0ff; }
+.plan { margin-top: 36px; border-left: 3px solid var(--azure); padding-left: 22px; font-family:var(--font-mono); font-size:25px; line-height:1.5; color:#17253d; }
+.plan .replace { color: var(--red); } .plan .create { color: var(--green); } .plan .why { color: #8a6100; }
+
+/* === DIAGRAMS === */
+.flow { margin-top: 48px; display:grid; grid-template-columns: 1fr 86px 1fr 86px 1fr; align-items:stretch; }
+.flow .node { min-height:210px; border:1px solid var(--line); border-radius:24px; padding:30px; background:var(--bg-panel); box-shadow: var(--shadow); }
+.flow .arrow { display:flex; align-items:center; justify-content:center; color:var(--azure); font-size:50px; font-family:var(--font-mono); }
+.node .num { font-family:var(--font-mono); color:var(--azure-bright); font-size:16px; letter-spacing:.14em; margin-bottom:14px; }
+.node h3 { color:var(--text-bright); font-size:34px; margin-bottom:14px; }
+.node p { font-size:24px; line-height:1.36; color:#3c4f66; }
+.wall { margin-top: 22px; display:grid; grid-template-columns: repeat(3,1fr); gap:20px; }
+.wall .brick { min-height:190px; padding:22px; border:1px solid rgba(209,52,56,.22); border-radius:22px; background:linear-gradient(180deg, rgba(255,241,241,.96), rgba(255,255,255,.9)); box-shadow: var(--shadow); }
+.brick .n { font-family:var(--font-mono); color:var(--red); letter-spacing:.18em; font-size:13px; text-transform:uppercase; margin-bottom:12px; }
+.brick h3 { font-size:28px; color:var(--text-bright); margin-bottom:10px; }
+.brick p { font-size:20px; line-height:1.26; color:#3c4f66; }
+
+/* === SPECIAL SLIDES === */
+.title-slide .shell { inset: 96px 110px 82px; }
+.title-slide h1 { margin-top: 104px; font-size: 196px; }
+.cursor { display:inline-block; width:24px; height:24px; background:#50e6ff; margin-left:14px; transform:translateY(5px); box-shadow:0 0 22px rgba(0,120,212,.34); animation:blink 1.15s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+.title-path { margin-top:34px; font-family:var(--font-mono); font-size:21px; color:var(--text-dim); border-left:3px solid var(--azure); padding-left:20px; }
+.title-path .p { color:var(--azure-bright); } .title-path .a { color:var(--azure); }
+.big-statement { margin-top: 108px; max-width: 1550px; font-family:var(--font-display); font-size:104px; line-height:1.08; letter-spacing:-.045em; font-weight:800; color:var(--text-bright); }
+.big-statement .dim { color:var(--text-dim); }
+.big-statement .accent { color:var(--azure); }
+.quote { margin-top: 70px; padding-left: 34px; border-left: 4px solid var(--azure); max-width: 1180px; font-size: 40px; line-height: 1.3; color:#17253d; }
+.divider h2 { font-size: 100px; max-width: 1500px; margin-top: 76px; }
+
+/* === INLINE EDITING UI === */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 84px; height: 84px; z-index: 10000; cursor: pointer; }
+.edit-toggle { position: fixed; top: 18px; left: 18px; z-index: 10001; opacity: 0; pointer-events: none; border: 1px solid rgba(0,120,212,.28); background: rgba(255,255,255,.95); color: var(--text-bright); border-radius: 999px; padding: 10px 14px; font: 600 14px var(--font-mono); transition: opacity .25s ease; }
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.editing [data-editable] { outline: 1px dashed rgba(0,120,212,.65); outline-offset: 4px; cursor: text; }
+.edit-status { position: fixed; right: 18px; bottom: 18px; z-index: 10001; opacity: 0; padding: 10px 14px; border-radius: 999px; background: rgba(255,255,255,.95); border: 1px solid var(--line); color: var(--text); font: 500 13px var(--font-mono); transition: opacity .25s ease; }
+.edit-status.show { opacity: 1; }
+
+/* === OUTSIDE-STAGE CONTROLS === */
+.deck-controls { display:flex; gap:14px; align-items:center; background: rgba(255,255,255,.86); border:1px solid var(--line); border-radius:999px; padding:10px 14px; backdrop-filter: blur(12px); color:var(--text-dim); font:500 13px var(--font-mono); box-shadow:0 12px 36px rgba(14,23,38,.12); }
+.deck-controls button { border:0; background:transparent; color:var(--azure-bright); font:inherit; cursor:pointer; padding:4px 8px; }
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- === SLIDE 01: TITLE === -->
+<section class="slide title-slide active visible" data-section="Intro">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal" style="--d:0"><span>terraform-provider-AzAPI <span class="path">/ internal/native</span></span><span class="live">PoC verified on live Azure</span></div>
+    <div class="kicker reveal" style="--d:1" data-editable>Static resources for AzAPI</div>
+    <h1 class="reveal" style="--d:2" data-editable>AzAPI <span class="grad">native</span><span class="cursor"></span></h1>
+    <p class="lead reveal" style="--d:3" data-editable>Typed, schema-first Azure resources — <b>generated from Azure's own type graph</b>, with <span style="color:var(--azure-bright)">azwise</span> operational knowledge baked in.</p>
+    <div class="title-path reveal" style="--d:4"><span class="a">resource</span> "azapi_storage_account" · <span class="p">Microsoft.Storage/storageAccounts@2025-01-01</span></div>
+    <div class="metric reveal" style="--d:5">
+      <div class="m"><div class="label">Session</div><div class="value">Azure team <span>sharing</span></div></div>
+      <div class="m"><div class="label">Depth</div><div class="value">Concepts, <span>not internals</span></div></div>
+      <div class="m"><div class="label">Positioning</div><div class="value">Native + <span>dynamic</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE 02: BACKGROUND GAP === -->
+<section class="slide" data-section="Background">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>background</span><span class="section">why this exists</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Azure teams are stuck between <span class="grad">two imperfect choices</span>.</h2>
+    <div class="grid-2">
+      <div class="card arm reveal-left" style="--d:2"><span class="tag green">AzureRM</span><h3>Typed, but expensive to ship</h3><ul><li>Schema design is hand work</li><li>Expand / flatten code is mechanical and repetitive</li><li>SDK or Pandora churn can block delivery even when the ARM API still works</li><li>HashiCorp coordination and PR review are slow</li><li>Final calls usually sit with HashiCorp</li></ul></div>
+      <div class="card dynamic reveal-left" style="--d:3"><span class="tag amber">azapi_resource</span><h3>Flexible, but shifts risk to users</h3><ul><li>Not exercised like a curated typed resource</li><li>API behavior is a black box to Terraform planning</li><li>Lifecycle, defaults, and drift responsibility move to users</li></ul></div>
+    </div>
+    <p class="quote reveal" style="--d:4" data-editable>We want AzureRM-like authoring — while keeping azapi_resource for the long tail.</p>
+  </div>
+</section>
+
+<!-- === SLIDE 03: WHAT IT IS === -->
+<section class="slide" data-section="Definition">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>definition</span><span class="section">what native means</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>AzAPI native generates <span class="grad">typed Terraform resources</span> from Azure's schema.</h2>
+    <div class="flow reveal" style="--d:2">
+      <div class="node"><div class="num">01 / Source</div><h3>Bicep type graph</h3><p>Use the ARM type data already embedded in the provider.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">02 / Layer</div><h3>Schema knowledge</h3><p>Combine flags, description mining, azwise overlays, and customizers.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">03 / Bake</div><h3>Generated resource</h3><p>Register a descriptor with schema, scopes, validators, defaults, and timeouts.</p></div>
+    </div>
+    <div class="metric reveal" style="--d:3">
+      <div class="m"><div class="label">Runtime</div><div class="value">One generic <span>Base</span></div></div>
+      <div class="m"><div class="label">Provider</div><div class="value">Same <span>binary</span></div></div>
+      <div class="m"><div class="label">Escape hatch</div><div class="value">Still <span>azapi_resource</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE 04: THREE OPTIONS COMPRESSED === -->
+<section class="slide" data-section="Positioning">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>positioning</span><span class="section">three tools, different jobs</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Keep all three. Use each where it is strongest.</h2>
+    <div class="compare">
+      <div class="col reveal-scale" style="--d:2"><div class="head">AzureRM<small>curated, hand-written provider</small></div><div class="body"><div class="row"><b>Wins at</b><span>Mature resources with deep lifecycle behavior and familiar typed UX.</span></div><div class="row"><b>Tradeoff</b><span>Coverage and maintenance move at hand-authored provider speed.</span></div></div></div>
+      <div class="col reveal-scale" style="--d:3"><div class="head">azapi_resource<small>dynamic ARM body</small></div><div class="body"><div class="row"><b>Wins at</b><span>Day-zero, preview APIs, exact ARM control, spec escape hatches.</span></div><div class="row"><b>Tradeoff</b><span>No typed resource schema, no per-resource hooks, generic lifecycle.</span></div></div></div>
+      <div class="col reveal-scale" style="--d:4"><div class="head">AzAPI native<small>generated static resources</small></div><div class="body"><div class="row"><b>Wins at</b><span>Stable resources where teams want AzureRM-like authoring on AzAPI.</span></div><div class="row"><b>Tradeoff</b><span>Curated rollout; unsupported types still use azapi_resource.</span></div></div></div>
+    </div>
+    <p class="quote reveal" style="--d:5" data-editable>Native is not a replacement strategy. It is the typed lane beside the dynamic escape hatch.</p>
+  </div>
+</section>
+
+<!-- === SLIDE 05: AUTHORING + UX COMPRESSED === -->
+<section class="slide" data-section="Comparison">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>comparison</span><span class="section">same ARM resource, better Terraform surface</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Same API call. Native makes the contract visible.</h2>
+    <div class="code-grid">
+      <div class="code-card reveal-left" style="--d:2"><div class="code-title"><span>azapi_resource</span><span>dynamic body</span></div><pre><span class="kw">resource</span> <span class="str">"azapi_resource"</span> <span class="str">"storage"</span> {
+  <span class="prop">type</span> = <span class="str">"Microsoft.Storage/storageAccounts@2025-01-01"</span>
+  <span class="prop">body</span> = {
+    kind = <span class="str">"StorageV2"</span>
+    properties = {
+      minimumTlsVersion = <span class="str">"TLS1_2"</span>
+      accessTier        = <span class="str">"Hot"</span>
+    }
+  }
+  response_export_values = {
+    blob_endpoint = <span class="str">"properties.primaryEndpoints.blob"</span>
+  }
+}</pre></div>
+      <div class="code-card reveal-left" style="--d:3"><div class="code-title"><span class="native-label">azapi_storage_account</span><span>typed schema</span></div><pre><span class="kw">resource</span> <span class="str">"azapi_storage_account"</span> <span class="str">"storage"</span> {
+  <span class="prop">kind</span> = <span class="str">"StorageV2"</span>
+  <span class="prop">properties</span> = {
+    minimum_tls_version = <span class="str">"TLS1_2"</span>
+    access_tier         = <span class="str">"Hot"</span>
+  }
+}
+
+<span class="cm"># direct typed reference</span>
+azapi_storage_account.storage.properties.primary_endpoints.blob</pre></div>
+    </div>
+    <div class="metric reveal" style="--d:4">
+      <div class="m"><div class="label">Tooling</div><div class="value">Provider <span>schema</span></div></div>
+      <div class="m"><div class="label">Diagnostics</div><div class="value">Typed <span>attributes</span></div></div>
+      <div class="m"><div class="label">Lifecycle</div><div class="value">Defaults · <span>ForceNew</span> · hooks</div></div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- === SLIDE 08: LIMITATION DIVIDER === -->
+<section class="slide divider" data-section="Scenarios">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>scenarios</span><span class="section">where dynamic hits the wall</span></div>
+    <div class="kicker reveal" style="--d:1">Why native matters</div>
+    <h2 class="reveal" style="--d:2" data-editable>azapi_resource has <span class="grad">hard structural limits</span>.</h2>
+    <div class="wall reveal" style="--d:3">
+      <div class="brick"><div class="n">Wall 01</div><h3>Plan-time replacement</h3><p>Generic dynamic bodies cannot express conditional, per-attribute RequiresReplace.</p></div>
+      <div class="brick"><div class="n">Wall 02</div><h3>Multi-API resources</h3><p>One azapi_resource maps to one ARM API call. Real Azure resources often do not.</p></div>
+      <div class="brick"><div class="n">Wall 03</div><h3>First-class state logic</h3><p>Computed outputs, defaults, cross-field rules, and ARM workarounds need a typed resource boundary.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE 09: WALL 1 FORCE NEW === -->
+<section class="slide" data-section="Scenario 1">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>scenario 01</span><span class="section">replace vs update</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Native can tell Terraform <span class="grad">what must be replaced</span> before apply.</h2>
+    <div class="grid-2">
+      <div class="card dynamic reveal-left" style="--d:2"><span class="tag amber">azapi_resource</span><h3>Generic PUT, then ARM decides</h3><p>The dynamic body changes. If the property is immutable or conditionally immutable, users often discover it when ARM rejects the update during apply.</p></div>
+      <div class="card native reveal-left" style="--d:3"><span class="tag">AzAPI native</span><h3>Per-attribute plan modifier</h3><p>azwise knowledge bakes replacement rules into the schema. Terraform plan can show exactly which attribute forces replacement.</p></div>
+    </div>
+    <div class="plan reveal" style="--d:4"><span class="replace">-/+</span> azapi_storage_account.example<br><span class="why">sku.name:</span> Standard_LRS → Standard_ZRS <span class="cm"># zone migration requires replacement</span></div>
+  </div>
+</section>
+
+<!-- === SLIDE 10: WALL 2 MULTI API === -->
+<section class="slide" data-section="Scenario 2">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>scenario 02</span><span class="section">one logical resource, many ARM APIs</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>A single Azure concept can span <span class="grad">multiple APIs</span>.</h2>
+    <div class="flow reveal" style="--d:2">
+      <div class="node"><div class="num">Storage Account</div><h3>Main resource</h3><p><code>Microsoft.Storage/storageAccounts</code> creates the account.</p></div>
+      <div class="arrow">+</div>
+      <div class="node"><div class="num">Service settings</div><h3>Separate endpoints</h3><p>Blob, file, queue settings live under their own ARM service APIs.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">Native hook</div><h3>Provider owns orchestration</h3><p>AfterCreate/AfterUpdate can call extra APIs and expose nested typed attributes.</p></div>
+    </div>
+    <div class="grid-2">
+      <div class="card dynamic reveal-left" style="--d:3"><h3>azapi_resource</h3><p>One resource = one API call. Users must split orchestration across HCL resources manually.</p></div>
+      <div class="card native reveal-left" style="--d:4"><h3>AzAPI native</h3><p>Default remains one ARM type per resource, but valuable AzureRM-style bundling can be hand-authored where it is worth it.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE 11: WALL 3 OUTPUTS DEFAULTS RULES === -->
+<section class="slide" data-section="Scenario 3">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>scenario 03</span><span class="section">state, defaults, validation</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Native makes intelligence <span class="grad">first-class</span>.</h2>
+    <div class="grid-3">
+      <div class="card native reveal-scale" style="--d:2"><span class="tag">Computed outputs</span><h3>Direct references</h3><p><code>properties.primary_endpoints.blob</code> is typed state, not a manually exported response path.</p></div>
+      <div class="card native reveal-scale" style="--d:3"><span class="tag">Real defaults</span><h3>Plans show intent</h3><p>Verified defaults like TLS, public network access, HTTPS-only behavior appear before apply.</p></div>
+      <div class="card native reveal-scale" style="--d:4"><span class="tag">Cross-field rules</span><h3>Resource-specific logic</h3><p>Rules like “Premium tier requires a compatible kind” belong in the provider, not tribal HCL knowledge.</p></div>
+    </div>
+    <div class="code-grid reveal" style="--d:5">
+      <div class="code-card"><div class="code-title"><span>dynamic output</span><span>named JMESPath query</span></div><pre>response_export_values = {
+  blob_endpoint = <span class="str">"properties.primaryEndpoints.blob"</span>
+}
+
+azapi_resource.storage.output.blob_endpoint</pre></div>
+      <div class="code-card"><div class="code-title"><span class="native-label">native output</span><span>typed state</span></div><pre>azapi_storage_account.storage
+  .properties.primary_endpoints.blob</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE: REAL AZAPI NATIVE EXAMPLES === -->
+<section class="slide" data-section="Examples">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>examples</span><span class="section">what native can encode that generic dynamic cannot</span></div>
+    <h2 class="reveal" style="--d:1" data-editable><span class="grad">AzAPI Native</span> gives us a place to encode real Azure behavior.</h2>
+    <div class="grid-3">
+      <div class="card native reveal-scale" style="--d:2"><span class="tag">Role Definition</span><h3>Wait for update convergence</h3><p>AfterUpdate uses the PUT response <code>updatedOn</code>, waits for <code>createdOn</code> to revert, and requires 12 consecutive settled reads so post-apply refresh does not see stale permissions.</p></div>
+      <div class="card native reveal-scale" style="--d:3"><span class="tag">Key Vault</span><h3>purge_on_destroy</h3><p>A synthetic behavior-only attribute drives an AfterDelete purge call against <code>deletedVaults/{name}</code>, freeing the vault name after soft-delete when purge protection allows it.</p></div>
+      <div class="card native reveal-scale" style="--d:4"><span class="tag">Web Site</span><h3>Strip ARM default rules</h3><p>ARM echoes implicit <code>ipSecurityRestrictions</code> default rules with priority <code>2147483647</code>. Native reads the config API, strips the sentinel rule, and prevents drift.</p></div>
+    </div>
+    <p class="quote reveal" style="--d:5" data-editable>These are not schema trivia. They are operational behaviors that belong in a typed per-resource boundary.</p>
+  </div>
+</section>
+
+<!-- === SLIDE: DEVELOPER EXPERIENCE VS AZURERM === -->
+<section class="slide" data-section="Developer Experience">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>developer experience</span><span class="section">native vs hand-written AzureRM work</span></div>
+    <h2 class="reveal" style="--d:1" data-editable><span class="grad">AzAPI Native</span> shifts work from provider plumbing to behavior.</h2>
+    <div class="grid-4 reveal" style="--d:2">
+      <div class="card native"><span class="tag">No schema design</span><h3>1:1 API mapping</h3><p>The generator turns Azure's schema into Terraform attributes; we customize only where API behavior demands it.</p></div>
+      <div class="card native"><span class="tag">No flatten / expand</span><h3>Generic wrapper</h3><p>The shared mapper handles ARM JSON ↔ typed state dynamically, without per-resource conversion code.</p></div>
+      <div class="card native"><span class="tag">No CRUD methods</span><h3>Shared lifecycle</h3><p>The Base owns create, read, update, delete, import, timeouts, mapping, and hook execution.</p></div>
+      <div class="card native"><span class="tag">Where we focus</span><h3>API behavior</h3><p>Test real defaults, drift, eventual consistency, immutability, and add customizers or hooks.</p></div>
+    </div>
+    <div class="flow reveal" style="--d:3">
+      <div class="node"><div class="num">01 / Verify</div><h3>Test the API</h3><p>Find what Azure actually returns and when it drifts.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">02 / Customize</div><h3>Shape the schema</h3><p>Validators, defaults, ForceNew, behavior-only meta attributes.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">03 / Hook</div><h3>Encode behavior</h3><p>Small hook for API quirks; no hand-written CRUD stack.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE: DATA SOURCE SUPPORT === -->
+<section class="slide" data-section="Data Sources">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>data sources</span><span class="section">automatic read-only support</span></div>
+    <h2 class="reveal" style="--d:1" data-editable><span class="grad">AzAPI Native</span> resources automatically get data sources.</h2>
+    <div class="grid-3 reveal" style="--d:2">
+      <div class="card native"><span class="tag">No second generator</span><h3>Same schema</h3><p>The runtime converts the generated resource schema into a data-source schema.</p></div>
+      <div class="card native"><span class="tag">Read-only contract</span><h3>Inputs vs outputs</h3><p><code>name</code> + parent are Required; body fields and <code>id</code> are Computed.</p></div>
+      <div class="card native"><span class="tag">Shared read path</span><h3>GET + flatten</h3><p>Compose ARM ID, call GET, then reuse mapper flattening into typed state.</p></div>
+    </div>
+    <div class="code-grid reveal" style="--d:3; margin-top: 24px;">
+      <div class="code-card"><div class="code-title"><span>resource released</span><span>generated once</span></div><pre><span class="kw">resource</span> <span class="str">"azapi_storage_account"</span> <span class="str">"storage"</span> {
+  <span class="prop">name</span>      = <span class="str">"acct1"</span>
+  <span class="prop">parent_id</span> = azapi_resource_group.rg.id
+}</pre></div>
+      <div class="code-card"><div class="code-title"><span class="native-label">data source available</span><span>no per-resource code</span></div><pre><span class="kw">data</span> <span class="str">"azapi_storage_account"</span> <span class="str">"existing"</span> {
+  <span class="prop">name</span>      = <span class="str">"acct1"</span>
+  <span class="prop">parent_id</span> = azapi_resource_group.rg.id
+}
+
+data.azapi_storage_account.existing
+  .properties.primary_endpoints.blob</pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE: AZAPI NATIVE DESIGN FLOW === -->
+<section class="slide" data-section="Design Flow">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>design flow</span><span class="section">how native resources are assembled</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Schema first. Behavior layered. Runtime shared.</h2>
+    <div class="flow reveal" style="--d:2">
+      <div class="node"><div class="num">01 / Source</div><h3>Bicep types.json</h3><p>ARM definitions provide body shape, Required/ReadOnly flags, descriptions, and API version.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">02 / Assemble</div><h3>Generator layers</h3><p>PostProcess mines descriptions, azwise overlays curated rules, then customizers get final say.</p></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="num">03 / Register</div><h3><code>_gen.go</code> descriptor</h3><p>The provider exposes it through the shared Base resource and converted data-source schema.</p></div>
+    </div>
+    <div class="grid-3 reveal" style="--d:3">
+      <div class="card native"><span class="tag">Descriptor</span><h3>Source of truth</h3><p>Name, ARM type, API version, schema, parent scope, writable scopes, and baked timeouts.</p></div>
+      <div class="card native"><span class="tag">Base resource</span><h3>Shared lifecycle</h3><p>CRUD, mapping, import, default handling, and hook dispatch are generic.</p></div>
+      <div class="card native"><span class="tag">Hooks + data source</span><h3>Targeted behavior</h3><p>Hooks encode API quirks; data sources are generated automatically from the same schema.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- === SLIDE 13: TAKEAWAYS === -->
+<section class="slide" data-section="Takeaways">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>takeaways</span><span class="section">what to remember</span></div>
+    <div class="kicker reveal" style="--d:1">Decision frame</div>
+    <div class="big-statement reveal" style="--d:2" data-editable><span class="accent">Typed where it helps.</span><br><span class="dim">Dynamic where it must.</span></div>
+    <div class="grid-4 reveal" style="--d:3">
+      <div class="card"><h3>1</h3><p>Native resources give AzAPI an AzureRM-like authoring surface.</p></div>
+      <div class="card"><h3>2</h3><p>They are generated from Azure schemas, then sharpened by azwise.</p></div>
+      <div class="card"><h3>3</h3><p>They unlock per-resource lifecycle and business logic azapi_resource cannot express.</p></div>
+      <div class="card"><h3>4</h3><p>They coexist with azapi_resource in the same provider — adoption is incremental.</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<!-- === CONTROLS AND INLINE EDITING === -->
+<div class="deck-controls" aria-label="Presentation controls">
+  <button id="prevBtn" title="Previous slide">←</button>
+  <span id="counter">1 / 13</span>
+  <button id="nextBtn" title="Next slide">→</button>
+</div>
+<div class="edit-hotzone" title="Edit mode"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">EDIT</button>
+<div class="edit-status" id="editStatus">Saved locally</div>
+
+<script>
+/* === SLIDE PRESENTATION CONTROLLER === */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.stage = document.getElementById('deckStage');
+        this.counter = document.getElementById('counter');
+        this.addFooters();
+        this.setupAnchors();
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.setupButtons();
+        this.showSlide(this.slideIndexFromHash(), { replaceHash: true });
+    }
+
+    addFooters() {
+        const total = this.slides.length;
+        this.slides.forEach((slide, i) => {
+            const footer = document.createElement('div');
+            const pct = ((i + 1) / total) * 100;
+            footer.className = 'footer';
+            footer.style.setProperty('--p', String(pct));
+            footer.innerHTML = `<span class="bar"></span><span class="progress"></span><span>AzAPI native / team share</span><span>${String(i + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span>`;
+            slide.appendChild(footer);
+        });
+    }
+
+    setupAnchors() {
+        this.slides.forEach((slide, i) => {
+            slide.id = `slide-${i + 1}`;
+            slide.dataset.slideNumber = String(i + 1);
+        });
+        window.addEventListener('hashchange', () => {
+            this.showSlide(this.slideIndexFromHash(), { fromHash: true });
+        });
+    }
+
+    slideIndexFromHash() {
+        const raw = decodeURIComponent(window.location.hash.replace(/^#/, '')).trim().toLowerCase();
+        if (!raw) return 0;
+        const match = raw.match(/^slide-(\d+)$/) || raw.match(/^(\d+)$/);
+        if (!match) return 0;
+        const n = Number(match[1]);
+        if (!Number.isFinite(n)) return 0;
+        return Math.max(0, Math.min(n - 1, this.slides.length - 1));
+    }
+
+    updateHash(index, replaceHash = false) {
+        const nextHash = `#slide-${index + 1}`;
+        if (window.location.hash === nextHash) return;
+        const nextURL = `${window.location.pathname}${window.location.search}${nextHash}`;
+        if (replaceHash) {
+            window.history.replaceState(null, '', nextURL);
+        } else {
+            window.history.pushState(null, '', nextURL);
+        }
+    }
+
+    setupStageScale() {
+        const scale = () => {
+            const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            const x = (window.innerWidth - 1920 * factor) / 2;
+            const y = (window.innerHeight - 1080 * factor) / 2;
+            this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener('resize', scale);
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            const editable = e.target && e.target.getAttribute && e.target.getAttribute('contenteditable') === 'true';
+            if (editable) return;
+            if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); this.next(); }
+            if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); this.prev(); }
+            if (e.key === 'Home') { e.preventDefault(); this.showSlide(0); }
+            if (e.key === 'End') { e.preventDefault(); this.showSlide(this.slides.length - 1); }
+        });
+    }
+
+    setupTouchNav() {
+        let startX = 0;
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+        document.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                dx < 0 ? this.next() : this.prev();
+            }
+        }, { passive: true });
+    }
+
+    setupWheelNav() {
+        let locked = false;
+        document.addEventListener('wheel', (e) => {
+            if (locked) return;
+            locked = true;
+            e.deltaY > 0 ? this.next() : this.prev();
+            setTimeout(() => locked = false, 520);
+        }, { passive: true });
+    }
+
+    setupButtons() {
+        document.getElementById('prevBtn').addEventListener('click', () => this.prev());
+        document.getElementById('nextBtn').addEventListener('click', () => this.next());
+    }
+
+    showSlide(index, options = {}) {
+        this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === this.currentSlide);
+            slide.classList.toggle('visible', i === this.currentSlide);
+        });
+        this.counter.textContent = `${this.currentSlide + 1} / ${this.slides.length}`;
+        if (!options.fromHash) {
+            this.updateHash(this.currentSlide, Boolean(options.replaceHash));
+        }
+    }
+
+    next() { this.showSlide(this.currentSlide + 1); }
+    prev() { this.showSlide(this.currentSlide - 1); }
+}
+
+/* === INLINE EDITOR === */
+class InlineEditor {
+    constructor() {
+        this.isActive = false;
+        this.key = 'AzAPI-native-team-share-edits-v1';
+        this.toggle = document.getElementById('editToggle');
+        this.status = document.getElementById('editStatus');
+        this.setup();
+        this.load();
+    }
+
+    setup() {
+        this.toggle.addEventListener('click', () => this.toggleEditMode());
+        document.addEventListener('keydown', (e) => {
+            const editing = e.target && e.target.getAttribute && e.target.getAttribute('contenteditable') === 'true';
+            if ((e.key === 'e' || e.key === 'E') && !editing) this.toggleEditMode();
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); this.save(); }
+        });
+        const hotzone = document.querySelector('.edit-hotzone');
+        let hideTimeout = null;
+        hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); this.toggle.classList.add('show'); });
+        hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) this.toggle.classList.remove('show'); }, 400); });
+        hotzone.addEventListener('click', () => this.toggleEditMode());
+        this.toggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+        this.toggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) this.toggle.classList.remove('show'); }, 400); });
+        document.querySelectorAll('[data-editable]').forEach((el, idx) => {
+            el.dataset.editId = `e${idx}`;
+            el.addEventListener('input', () => this.save());
+        });
+    }
+
+    toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        this.toggle.classList.toggle('active', this.isActive);
+        this.toggle.classList.add('show');
+        document.querySelectorAll('[data-editable]').forEach(el => el.setAttribute('contenteditable', this.isActive ? 'true' : 'false'));
+        this.flash(this.isActive ? 'Edit mode on' : 'Edit mode off');
+    }
+
+    save() {
+        const data = {};
+        document.querySelectorAll('[data-editable]').forEach(el => data[el.dataset.editId] = el.innerHTML);
+        localStorage.setItem(this.key, JSON.stringify(data));
+        this.flash('Saved locally');
+    }
+
+    load() {
+        const raw = localStorage.getItem(this.key);
+        if (!raw) return;
+        try {
+            const data = JSON.parse(raw);
+            document.querySelectorAll('[data-editable]').forEach(el => {
+                if (data[el.dataset.editId]) el.innerHTML = data[el.dataset.editId];
+            });
+        } catch (_) {}
+    }
+
+    flash(text) {
+        this.status.textContent = text;
+        this.status.classList.add('show');
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.status.classList.remove('show'), 1300);
+    }
+}
+
+/* === BOOT === */
+window.addEventListener('DOMContentLoaded', () => {
+    window.deck = new SlidePresentation();
+    window.editor = new InlineEditor();
+});
+</script>
+</body>
+</html>
