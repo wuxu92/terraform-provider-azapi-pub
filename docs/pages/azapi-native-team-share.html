@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AzAPI native — Team Share</title>
+<title>AzAPI Native — Team Share</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -334,10 +334,10 @@ pre { padding: 22px 24px 26px; font-family:var(--font-mono); font-size:18px; lin
 <section class="slide title-slide active visible" data-section="Intro">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
-    <div class="topbar reveal" style="--d:0"><span>terraform-provider-AzAPI <span class="path">/ internal/native</span></span><span class="live">PoC verified on live Azure</span></div>
+    <div class="topbar reveal" style="--d:0"><span>terraform-provider-azapi<span class="path">/internal/native</span></span><span class="live">PoC verified on live Azure</span></div>
     <div class="kicker reveal" style="--d:1" data-editable>Static resources for AzAPI</div>
-    <h1 class="reveal" style="--d:2" data-editable>AzAPI <span class="grad">native</span><span class="cursor"></span></h1>
-    <p class="lead reveal" style="--d:3" data-editable>Typed, schema-first Azure resources — <b>generated from Azure's own type graph</b>, with <span style="color:var(--azure-bright)">azwise</span> operational knowledge baked in.</p>
+    <h1 class="reveal" style="--d:2" data-editable>AzAPI <span class="grad">Native</span><span class="cursor"></span></h1>
+    <p class="lead reveal" style="--d:3" data-editable>Typed, schema-first Azure resources — <b>generated from Azure's own type graph</b>, with <span style="color:var(--azure-bright)">azwise</span> operational knowledge baked in — and <b>easy to customize and hook logic onto</b> for a more Terraform-native feel.</p>
     <div class="title-path reveal" style="--d:4"><span class="a">resource</span> "azapi_storage_account" · <span class="p">Microsoft.Storage/storageAccounts@2025-01-01</span></div>
     <div class="metric reveal" style="--d:5">
       <div class="m"><div class="label">Session</div><div class="value">Azure team <span>sharing</span></div></div>
@@ -352,7 +352,7 @@ pre { padding: 22px 24px 26px; font-family:var(--font-mono); font-size:18px; lin
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
     <div class="topbar reveal"><span>background</span><span class="section">why this exists</span></div>
-    <h2 class="reveal" style="--d:1" data-editable>Azure teams are stuck between <span class="grad">two imperfect choices</span>.</h2>
+    <h2 class="reveal" style="--d:1" data-editable>Azure Terraform team is stuck between <span class="grad">two imperfect choices</span>.</h2>
     <div class="grid-2">
       <div class="card arm reveal-left" style="--d:2"><span class="tag green">AzureRM</span><h3>Typed, but expensive to ship</h3><ul><li>Schema design is hand work</li><li>Expand / flatten code is mechanical and repetitive</li><li>SDK or Pandora churn can block delivery even when the ARM API still works</li><li>HashiCorp coordination and PR review are slow</li><li>Final calls usually sit with HashiCorp</li></ul></div>
       <div class="card dynamic reveal-left" style="--d:3"><span class="tag amber">azapi_resource</span><h3>Flexible, but shifts risk to users</h3><ul><li>Not exercised like a curated typed resource</li><li>API behavior is a black box to Terraform planning</li><li>Lifecycle, defaults, and drift responsibility move to users</li></ul></div>
@@ -366,7 +366,7 @@ pre { padding: 22px 24px 26px; font-family:var(--font-mono); font-size:18px; lin
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
     <div class="topbar reveal"><span>definition</span><span class="section">what native means</span></div>
-    <h2 class="reveal" style="--d:1" data-editable>AzAPI native generates <span class="grad">typed Terraform resources</span> from Azure's schema.</h2>
+    <h2 class="reveal" style="--d:1" data-editable>AzAPI Native generates <span class="grad">typed Terraform resources</span> from Azure's schema.</h2>
     <div class="flow reveal" style="--d:2">
       <div class="node"><div class="num">01 / Source</div><h3>Bicep type graph</h3><p>Use the ARM type data already embedded in the provider.</p></div>
       <div class="arrow">→</div>
@@ -391,7 +391,7 @@ pre { padding: 22px 24px 26px; font-family:var(--font-mono); font-size:18px; lin
     <div class="compare">
       <div class="col reveal-scale" style="--d:2"><div class="head">AzureRM<small>curated, hand-written provider</small></div><div class="body"><div class="row"><b>Wins at</b><span>Mature resources with deep lifecycle behavior and familiar typed UX.</span></div><div class="row"><b>Tradeoff</b><span>Coverage and maintenance move at hand-authored provider speed.</span></div></div></div>
       <div class="col reveal-scale" style="--d:3"><div class="head">azapi_resource<small>dynamic ARM body</small></div><div class="body"><div class="row"><b>Wins at</b><span>Day-zero, preview APIs, exact ARM control, spec escape hatches.</span></div><div class="row"><b>Tradeoff</b><span>No typed resource schema, no per-resource hooks, generic lifecycle.</span></div></div></div>
-      <div class="col reveal-scale" style="--d:4"><div class="head">AzAPI native<small>generated static resources</small></div><div class="body"><div class="row"><b>Wins at</b><span>Stable resources where teams want AzureRM-like authoring on AzAPI.</span></div><div class="row"><b>Tradeoff</b><span>Curated rollout; unsupported types still use azapi_resource.</span></div></div></div>
+      <div class="col reveal-scale" style="--d:4"><div class="head">AzAPI Native<small>generated static resources</small></div><div class="body"><div class="row"><b>Wins at</b><span>Stable resources where teams want AzureRM-like authoring on AzAPI.</span></div><div class="row"><b>Tradeoff</b><span>Curated rollout; unsupported types still use azapi_resource.</span></div></div></div>
     </div>
     <p class="quote reveal" style="--d:5" data-editable>Native is not a replacement strategy. It is the typed lane beside the dynamic escape hatch.</p>
   </div>
@@ -438,7 +438,7 @@ azapi_storage_account.storage.properties.primary_endpoints.blob</pre></div>
 
 
 
-<!-- === SLIDE 08: LIMITATION DIVIDER === -->
+<!-- === SLIDE 06: LIMITATION DIVIDER === -->
 <section class="slide divider" data-section="Scenarios">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -446,28 +446,28 @@ azapi_storage_account.storage.properties.primary_endpoints.blob</pre></div>
     <div class="kicker reveal" style="--d:1">Why native matters</div>
     <h2 class="reveal" style="--d:2" data-editable>azapi_resource has <span class="grad">hard structural limits</span>.</h2>
     <div class="wall reveal" style="--d:3">
-      <div class="brick"><div class="n">Wall 01</div><h3>Plan-time replacement</h3><p>Generic dynamic bodies cannot express conditional, per-attribute RequiresReplace.</p></div>
+      <div class="brick"><div class="n">Wall 01</div><h3>Plan-time replacement/validate</h3><p>Generic dynamic bodies cannot express conditional, per-attribute RequiresReplace.</p></div>
       <div class="brick"><div class="n">Wall 02</div><h3>Multi-API resources</h3><p>One azapi_resource maps to one ARM API call. Real Azure resources often do not.</p></div>
       <div class="brick"><div class="n">Wall 03</div><h3>First-class state logic</h3><p>Computed outputs, defaults, cross-field rules, and ARM workarounds need a typed resource boundary.</p></div>
     </div>
   </div>
 </section>
 
-<!-- === SLIDE 09: WALL 1 FORCE NEW === -->
+<!-- === SLIDE 07: WALL 1 FORCE NEW === -->
 <section class="slide" data-section="Scenario 1">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
     <div class="topbar reveal"><span>scenario 01</span><span class="section">replace vs update</span></div>
     <h2 class="reveal" style="--d:1" data-editable>Native can tell Terraform <span class="grad">what must be replaced</span> before apply.</h2>
     <div class="grid-2">
-      <div class="card dynamic reveal-left" style="--d:2"><span class="tag amber">azapi_resource</span><h3>Generic PUT, then ARM decides</h3><p>The dynamic body changes. If the property is immutable or conditionally immutable, users often discover it when ARM rejects the update during apply.</p></div>
+      <div class="card dynamic reveal-left" style="--d:2"><span class="tag amber">azapi_resource</span><h3>Generic PUT, then ARM decides</h3><p>The dynamic body changes. If the property is immutable or conditionally immutable, users often discover it when ARM rejects the update during apply. Replacement must be wired manually via <code>replace_triggers_refs</code> / <code>replace_triggers_external_values</code> — an escape hatch, not the Terraform way.</p></div>
       <div class="card native reveal-left" style="--d:3"><span class="tag">AzAPI native</span><h3>Per-attribute plan modifier</h3><p>azwise knowledge bakes replacement rules into the schema. Terraform plan can show exactly which attribute forces replacement.</p></div>
     </div>
     <div class="plan reveal" style="--d:4"><span class="replace">-/+</span> azapi_storage_account.example<br><span class="why">sku.name:</span> Standard_LRS → Standard_ZRS <span class="cm"># zone migration requires replacement</span></div>
   </div>
 </section>
 
-<!-- === SLIDE 10: WALL 2 MULTI API === -->
+<!-- === SLIDE 8: WALL 2 MULTI API === -->
 <section class="slide" data-section="Scenario 2">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -487,7 +487,7 @@ azapi_storage_account.storage.properties.primary_endpoints.blob</pre></div>
   </div>
 </section>
 
-<!-- === SLIDE 11: WALL 3 OUTPUTS DEFAULTS RULES === -->
+<!-- === SLIDE 9: WALL 3 OUTPUTS DEFAULTS RULES === -->
 <section class="slide" data-section="Scenario 3">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -510,7 +510,7 @@ azapi_resource.storage.output.blob_endpoint</pre></div>
   </div>
 </section>
 
-<!-- === SLIDE: REAL AZAPI NATIVE EXAMPLES === -->
+<!-- === SLIDE 10: REAL AZAPI NATIVE EXAMPLES === -->
 <section class="slide" data-section="Examples">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -525,7 +525,7 @@ azapi_resource.storage.output.blob_endpoint</pre></div>
   </div>
 </section>
 
-<!-- === SLIDE: DEVELOPER EXPERIENCE VS AZURERM === -->
+<!-- === SLIDE 11: DEVELOPER EXPERIENCE VS AZURERM === -->
 <section class="slide" data-section="Developer Experience">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -547,7 +547,7 @@ azapi_resource.storage.output.blob_endpoint</pre></div>
   </div>
 </section>
 
-<!-- === SLIDE: DATA SOURCE SUPPORT === -->
+<!-- === SLIDE 12: DATA SOURCE SUPPORT === -->
 <section class="slide" data-section="Data Sources">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -574,7 +574,7 @@ data.azapi_storage_account.existing
   </div>
 </section>
 
-<!-- === SLIDE: AZAPI NATIVE DESIGN FLOW === -->
+<!-- === SLIDE 13: AZAPI NATIVE DESIGN FLOW === -->
 <section class="slide" data-section="Design Flow">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -595,7 +595,7 @@ data.azapi_storage_account.existing
   </div>
 </section>
 
-<!-- === SLIDE 13: TAKEAWAYS === -->
+<!-- === SLIDE 14: TAKEAWAYS === -->
 <section class="slide" data-section="Takeaways">
   <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
   <div class="shell">
@@ -611,13 +611,31 @@ data.azapi_storage_account.existing
   </div>
 </section>
 
+<!-- === SLIDE 15: CURRENT STATUS === -->
+<section class="slide" data-section="Status">
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <div class="shell">
+    <div class="topbar reveal"><span>current status</span><span class="live">PoC verified on live Azure</span></div>
+    <h2 class="reveal" style="--d:1" data-editable>Where <span class="grad">AzAPI Native</span> stands today.</h2>
+    <div class="grid-3">
+      <div class="card native reveal-scale" style="--d:2"><span class="tag">Knowledge pipeline</span><h3>Extract from AzureRM</h3><p>An AI agent / skill mines terraform-provider-azurerm for operational knowledge — ForceNew, defaults, validation, and cross-field rules — into azwise overlays.</p></div>
+      <div class="card native reveal-scale" style="--d:3"><span class="tag">Static generator</span><h3>Generate new resources</h3><p>An AI skill drives a static generator that turns an ARM type into a typed native resource, wiring schema, descriptor, and data source.</p></div>
+      <div class="card native reveal-scale" style="--d:4"><span class="tag">Behavior layer</span><h3>Customizers &amp; hooks</h3><p>Full customizer and hook capabilities on generated resources — validators, defaults, ForceNew, behavior-only attributes, and lifecycle hooks.</p></div>
+    </div>
+    <div class="grid-2" style="margin-top: 20px;">
+      <div class="card native reveal-left" style="--d:5"><span class="tag">9 resources shipped</span><h3>Real coverage</h3><p><code>storage_account</code>, <code>role_definition</code>, <code>role_assignment</code>, <code>key_vault_key</code>, <code>web_site</code>, <code>virtual_network</code>, and more — each verified against live Azure.</p></div>
+      <div class="card native reveal-left" style="--d:6"><span class="tag">Documentation</span><h3>Developer spec &amp; guidance</h3><p>Full developer specification and guidance documents cover the generator, customizers, hooks, and the end-to-end authoring workflow.</p></div>
+    </div>
+  </div>
+</section>
+
 </main>
 </div>
 
 <!-- === CONTROLS AND INLINE EDITING === -->
 <div class="deck-controls" aria-label="Presentation controls">
   <button id="prevBtn" title="Previous slide">←</button>
-  <span id="counter">1 / 13</span>
+  <span id="counter">1 / 14</span>
   <button id="nextBtn" title="Next slide">→</button>
 </div>
 <div class="edit-hotzone" title="Edit mode"></div>
